@@ -2,6 +2,8 @@ package org.selenide.selenoid;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.net.URIBuilder;
 import org.slf4j.Logger;
@@ -94,6 +96,18 @@ public class SelenoidClient {
     catch (IOException e) {
       throw new RuntimeException("Failed to download file " + url, e);
     }
+  }
+
+  @CheckReturnValue
+  @Nonnull
+  public String getClipboard() {
+    String clipboard;
+    try {
+      clipboard = new OkHttpClient().newCall(new Request.Builder().url(url(baseUrl,"clipboard", sessionId)).build()).execute().body().string();
+    } catch (IOException e) {
+      throw new RuntimeException("Can't get clipboard content! " + e);
+    }
+    return clipboard;
   }
 
   @CheckReturnValue
