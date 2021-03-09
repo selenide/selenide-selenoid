@@ -2,8 +2,6 @@ package org.selenide.selenoid;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import org.apache.commons.io.IOUtils;
 import org.apache.hc.core5.net.URIBuilder;
 import org.slf4j.Logger;
@@ -17,6 +15,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.BufferedReader;
+import java.io.OutputStreamWriter;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -26,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -98,23 +100,47 @@ public class SelenoidClient {
     }
   }
 
-  @CheckReturnValue
-  @Nonnull
-  public String getClipboard() {
-    String clipboard;
-    try {
-      clipboard = new OkHttpClient().newCall(new Request.Builder().url(url(baseUrl,"clipboard", sessionId)).build()).execute().body().string();
-    } catch (IOException e) {
-      throw new RuntimeException("Can't get clipboard content! " + e);
-    }
-    return clipboard;
-  }
+    @CheckReturnValue
+    @Nonnull
+    public String getClipboardText() {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) url(baseUrl, "clipboard", sessionId).openConnection();
+            int code = connection.getResponseCode();
+            if (code != 200)
+                throw new RuntimeException("Something went wrong while getting clipboard! Response code: " + code);
 
-  @CheckReturnValue
-  @Nonnull
-  URL urlOfDownloadedFile(String fileName) {
-    return url(baseUrl, "download", sessionId, fileName);
-  }
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                return reader.lines().collect(Collectors.joining());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Something went wrong while getting clipboard!", e);
+        }
+    }
+
+    public void setClipboardText(String text) {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) url(baseUrl, "clipboard", sessionId).openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            connection.setConnectTimeout(10000);
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            try (OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream())) {
+                writer.write(text);
+            }
+            int code = connection.getResponseCode();
+            if (code != 200)
+                throw new RuntimeException("Something went wrong while writing clipboard! Response code: " + code);
+        } catch (IOException e) {
+            throw new RuntimeException("Can't set clipboard content! ", e);
+        }
+    }
+
+    @CheckReturnValue
+    @Nonnull
+    URL urlOfDownloadedFile(String fileName) {
+        return url(baseUrl, "download", sessionId, fileName);
+    }
 
   @CheckReturnValue
   @Nonnull
