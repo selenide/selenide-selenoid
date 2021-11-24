@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.2.0
+* Add helper classes SelenoidOptions and Selenoid***Options
+
 ## 2.1.0 (released 24.11.2021)
 * upgrade to Selenide 6.1.0
 * upgrade to Selenium webdriver 4.1.0
