@@ -2,9 +2,12 @@ package integration;
 
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.FileDownloadMode;
+import com.codeborne.selenide.WebDriverRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.MutableCapabilities;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.selenide.selenoid.setup.SelenoidEdgeOptions;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,20 +20,16 @@ import static com.codeborne.selenide.files.FileFilters.withExtension;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.selenide.selenoid.setup.SelenoidOptions.all;
 
 public class FileDownloadTest {
   @BeforeEach
   void setUp() {
     closeWebDriver();
 
-    DesiredCapabilities capabilities = new DesiredCapabilities();
-    capabilities.setBrowserName("chrome");
-    capabilities.setVersion("86.0");
-    capabilities.setCapability("enableVNC", true);
-    capabilities.setCapability("enableVideo", true);
-    capabilities.setCapability("enableLog", true);
-    Configuration.browserCapabilities = capabilities;
     Configuration.fileDownload = FileDownloadMode.FOLDER;
+    Configuration.browser = "edge";
+    Configuration.browserCapabilities = new SelenoidEdgeOptions(all());
   }
 
   @Test
@@ -41,17 +40,19 @@ public class FileDownloadTest {
     File file = $(byText("some-file.txt")).download(withExtension("txt"));
 
     assertThat(file.getName()).isEqualTo("some-file.txt");
-    assertThat(readFileToString(file, UTF_8)).startsWith("{\\rtf1");
+    assertThat(readFileToString(file, UTF_8)).isEqualTo("blah");
   }
 
   @Test
   void downloadFileInLocalBrowser() throws IOException {
     Configuration.remote = null;
+    Configuration.browserCapabilities = new MutableCapabilities();
     open("https://the-internet.herokuapp.com/download");
 
     File file = $(byText("some-file.txt")).download(withExtension("txt"));
 
     assertThat(file.getName()).isEqualTo("some-file.txt");
-    assertThat(readFileToString(file, UTF_8)).startsWith("{\\rtf1");
+    assertThat(readFileToString(file, UTF_8)).isEqualTo("blah");
+    assertThat(WebDriverRunner.getWebDriver()).isInstanceOf(EdgeDriver.class);
   }
 }
