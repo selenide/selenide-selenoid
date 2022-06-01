@@ -33,7 +33,7 @@ public class SelenoidCdpProvider implements CdpProvider {
       log.debug("Working in local browser. Switching to a default devtools implementation.");
       return new SeleniumCdpProvider().getCdp(driver);
     } else {
-      chromiumGuard(driver);
+      requireChromium(driver.getWebDriver());
       String cdpUrl = getSelenoidCdpUrl(driver, config);
       HasCapabilities webDriver = (HasCapabilities) driver.getWebDriver();
       Capabilities capabilities = webDriver.getCapabilities();
