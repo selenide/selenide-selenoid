@@ -92,6 +92,12 @@ if (project.hasProperty("signing.keyId")) {
               exportDependency(dependenciesNode, it, 'runtime')
             }
           }
+          distributionManagement {
+            relocation {
+              groupId = 'com.codeborne'
+              artifactId = 'selenide-selenoid'
+            }
+          }
         }
       }
     }
