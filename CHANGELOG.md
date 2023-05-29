@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.3.8 (released 2x.05.2023)
+## 2.3.8 (released 29.05.2023)
 Project "selenide-selenoid" was merged into project "selenide".
 Note that "groupId" will change from "org.selenide" to "com.codeborne".
 Now you will need to use dependency "com.codeborne:selenide-selenoid:6.15.0" or higher.
